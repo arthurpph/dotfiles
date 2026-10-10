@@ -27,6 +27,10 @@ class InstallerTests(unittest.TestCase):
                 exec(compile(script, str(ROOT / 'install.sh'), 'exec'), {})
             self.assertEqual((home / '.config/alacritty/alacritty.toml').resolve(), ROOT.parent / 'alacritty/alacritty.toml')
             self.assertTrue((home / 'Pictures/Wallpapers/WallPaper 13.png').is_file())
+            wallpapers = list((ROOT / 'assets/wallpapers').iterdir())
+            self.assertEqual({p.name for p in (home / 'Pictures/Wallpapers').iterdir()}, {p.name for p in wallpapers})
+            for wallpaper in wallpapers:
+                self.assertEqual((home / 'Pictures/Wallpapers' / wallpaper.name).resolve(), wallpaper)
             self.assertTrue((home / '.config/43pr/bin/pywalfox-host.sh').is_file())
             with patch.object(Path, 'home', return_value=home), patch.object(sys, 'argv', argv), contextlib.redirect_stdout(io.StringIO()):
                 exec(compile(script, str(ROOT / 'install.sh'), 'exec'), {})

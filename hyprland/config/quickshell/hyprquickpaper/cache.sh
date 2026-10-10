@@ -23,11 +23,7 @@ mkdir -p "$cache_path"
 echo "Wallpaper path: $wallpaper_path"
 echo "Cache path: $cache_path"
 
-find "$wallpaper_path" -type f \( \
-    -iname "*.jpg" -o \
-    -iname "*.jpeg" -o \
-    -iname "*.png" \
-\) | while read -r img; do
+while IFS= read -r -d '' img; do
 
     filename=$(basename "$img")
     out="$cache_path/$filename"
@@ -44,7 +40,12 @@ find "$wallpaper_path" -type f \( \
             wait -n
         done
     fi
-done
+done < <(find -L "$wallpaper_path" -type f \( \
+    -iname "*.jpg" -o \
+    -iname "*.jpeg" -o \
+    -iname "*.png" -o \
+    -iname "*.webp" \
+\) -print0)
 
 wait
 echo "Thumbnail generation complete."

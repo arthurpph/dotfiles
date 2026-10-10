@@ -70,7 +70,7 @@ for directory in directories:
 
 links = [(src, config / src.relative_to(source)) for src in sorted(source.rglob('*')) if src.is_file()]
 links.append((root.parent / 'alacritty/alacritty.toml', config / 'alacritty/alacritty.toml'))
-links.extend((src, home / 'Pictures/Wallpapers' / src.name) for src in sorted((root / 'assets/wallpapers').glob('*.png')))
+links.extend((src, home / 'Pictures/Wallpapers' / src.name) for src in sorted((root / 'assets/wallpapers').iterdir()) if src.is_file())
 for src, dst in links:
     if not src.is_file():
         raise FileNotFoundError(src)
