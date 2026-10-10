@@ -33,6 +33,7 @@ fi
 
 if [[ "$MODE" != --dry-run ]]; then
     git -C "$ROOT" submodule update --init --recursive
+    python3 "$ROOT/scripts/refresh-session.py" begin "$ROOT" "$DESKTOP"
 fi
 python3 "$ROOT/scripts/install-configs.py" "$ROOT" "$DESKTOP" "$MODE"
 if [[ "$MODE" == --dry-run ]]; then
@@ -51,4 +52,5 @@ if [[ "$DESKTOP" == hyprland ]]; then
     fi
     bash "$ROOT/environments/hyprland/scripts/setup-spicetify.sh"
 fi
-echo "Installation complete. Shared applications and $DESKTOP configurations are ready. Log out and back in to load desktop changes."
+python3 "$ROOT/scripts/refresh-session.py" finish "$ROOT" "$DESKTOP"
+echo "Installation complete. Shared applications and $DESKTOP configurations are ready."
