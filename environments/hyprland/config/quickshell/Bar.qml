@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import Quickshell.Services.SystemTray
 
 Scope {
     id: root
@@ -29,6 +30,7 @@ Scope {
             property bool border: false
             property bool showStats: true
             property bool showWs: true
+            property bool showTray: true
             property bool showMedia: true
             property bool showVolume: true
             property bool showBattery: true
@@ -36,7 +38,7 @@ Scope {
             property bool showNotif: true
             property bool showWall: true
             property bool showSettings: true
-            property string startMods: "stats,ws"
+            property string startMods: "stats,ws,tray"
             property string centerMods: "clock"
             property string endMods: "media,volume,battery,net,notif,wall,settings,power"
         }
@@ -51,10 +53,10 @@ Scope {
     function resetSettings() {
         cfg.position = "top"; cfg.style = "joined"; cfg.thickness = 20; cfg.margin = 4;
         cfg.scale = 1.0; cfg.bgOpacity = 0.7; cfg.border = false;
-        cfg.showStats = false; cfg.showWs = true; cfg.showMedia = true;
+        cfg.showStats = false; cfg.showWs = true; cfg.showTray = true; cfg.showMedia = true;
         cfg.showVolume = true; cfg.showBattery = true; cfg.showNet = true;
         cfg.showNotif = true; cfg.showWall = true; cfg.showSettings = true;
-        cfg.startMods = "stats,ws";
+        cfg.startMods = "stats,ws,tray";
         cfg.centerMods = "clock";
         cfg.endMods = "media,volume,battery,net,notif,wall,settings,power";
     }
@@ -103,10 +105,12 @@ Scope {
     readonly property var batIcons: ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"]
     readonly property string batIcon: batIcons[batPct >= 90 ? 4 : batPct >= 65 ? 3 : batPct >= 40 ? 2 : batPct >= 15 ? 1 : 0]
 
-    readonly property var moduleIds: ["stats", "ws", "media", "volume", "battery", "net", "notif", "wall", "settings", "power"]
+    readonly property var trayItems: SystemTray.items.values.filter(item => item.status !== Status.Passive)
+    readonly property var moduleIds: ["stats", "ws", "tray", "media", "volume", "battery", "net", "notif", "wall", "settings", "power"]
     readonly property var moduleDefs: [
         { id: "stats", l: "CPU / RAM (x)", k: "showStats" },
         { id: "ws", l: "Workspaces", k: "showWs" },
+        { id: "tray", l: "System tray", k: "showTray" },
         { id: "media", l: "Media", k: "showMedia" },
         { id: "volume", l: "Volume", k: "showVolume" },
         { id: "battery", l: "Battery", k: "showBattery" },
@@ -117,8 +121,17 @@ Scope {
         { id: "power", l: "Power", k: "" }
     ]
 
-    readonly property var startList: cfg.startMods === "" ? []
-        : cfg.startMods.split(",").filter(x => moduleIds.indexOf(x) >= 0)
+    readonly property var startList: {
+        const a = cfg.startMods === "" ? []
+            : cfg.startMods.split(",").filter(x => moduleIds.indexOf(x) >= 0);
+        // Existing bar settings predate the tray module. Place it after workspaces.
+        const configured = [cfg.startMods, cfg.centerMods, cfg.endMods].join(",").split(",");
+        if (configured.indexOf("tray") < 0) {
+            const ws = a.indexOf("ws");
+            a.splice(ws < 0 ? a.length : ws + 1, 0, "tray");
+        }
+        return a;
+    }
 
     readonly property var centerList: {
         const a = cfg.centerMods === "" ? []
@@ -167,6 +180,7 @@ Scope {
         switch (id) {
         case "stats": return cfg.showStats && !vertical;
         case "ws": return cfg.showWs;
+        case "tray": return cfg.showTray && root.trayItems.length > 0;
         case "media": return cfg.showMedia && Marquee.player !== null && Marquee.title !== "";
         case "volume": return cfg.showVolume;
         case "battery": return cfg.showBattery && battery !== null;
@@ -182,6 +196,7 @@ Scope {
         switch (id) {
         case "stats": return statsC;
         case "ws": return wsC;
+        case "tray": return trayC;
         case "media": return mediaC;
         case "volume": return volumeC;
         case "battery": return batteryC;
@@ -641,6 +656,211 @@ Scope {
                     if (mouse.button === Qt.LeftButton) p.togglePlaying();
                     else if (mouse.button === Qt.RightButton) p.next();
                     else p.previous();
+                }
+            }
+        }
+    }
+
+    Component {
+        id: trayC
+        Lane {
+            gap: root.s(4)
+            Repeater {
+                model: root.trayItems
+                delegate: Rectangle {
+                    id: trayIcon
+                    required property var modelData
+                    implicitWidth: root.vertical ? root.panelThick : root.s(22)
+                    implicitHeight: root.vertical ? root.s(24) : root.panelThick - 2
+                    radius: Theme.radius
+                    color: trayMouse.containsMouse ? Qt.alpha(Theme.accent, 0.25) : "transparent"
+
+                    function openMenu() {
+                        if (!modelData.hasMenu) return;
+                        const win = trayIcon.QsWindow.window;
+                        if (!win) return;
+                        menuLevels.clear();
+                        menuLevels.append({handle: modelData.menu});
+                        trayMenu.visible = true;
+                    }
+
+                    PopupWindow {
+                        id: trayMenu
+                        readonly property point origin: trayIcon.QsWindow.window
+                            ? trayIcon.mapToItem(trayIcon.QsWindow.window.contentItem, 0, 0) : Qt.point(0, 0)
+                        anchor.window: trayIcon.QsWindow.window
+                        anchor.rect.x: root.vertical
+                            ? (cfg.position === "left" ? origin.x + trayIcon.width + 6 : origin.x - implicitWidth - 6)
+                            : origin.x
+                        anchor.rect.y: root.vertical ? origin.y
+                            : (cfg.position === "bottom" ? origin.y - implicitHeight - 6 : origin.y + trayIcon.height + 6)
+                        implicitWidth: root.s(250)
+                        implicitHeight: menuColumn.implicitHeight + root.s(12)
+                        color: "transparent"
+                        grabFocus: true
+                        onVisibleChanged: if (!visible) menuLevels.clear();
+                        ListModel { id: menuLevels; dynamicRoles: true }
+
+                        Rectangle {
+                            focus: true
+                            Keys.onEscapePressed: trayMenu.visible = false
+                            anchors.fill: parent
+                            color: Theme.bgPanel
+                            radius: Theme.radius
+                            border.width: 1
+                            border.color: Theme.borderAccent
+
+                            Column {
+                                id: menuColumn
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: root.s(6)
+                                spacing: 0
+
+                                Rectangle {
+                                    width: parent.width
+                                    height: visible ? root.s(24) : 0
+                                    visible: menuLevels.count > 1
+                                    radius: root.s(5)
+                                    color: backMouse.containsMouse ? Qt.alpha(Theme.accent, 0.2) : "transparent"
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "‹  Back"
+                                        color: Theme.text
+                                        font.family: Theme.iconFont
+                                        font.weight: Font.DemiBold
+                                        font.pixelSize: root.s(12)
+                                    }
+                                    MouseArea {
+                                        id: backMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: menuLevels.remove(menuLevels.count - 1)
+                                    }
+                                }
+
+                                // Keep ancestor openers alive while browsing submenus.
+                                Repeater {
+                                    model: menuLevels
+                                    delegate: Column {
+                                        id: menuLevel
+                                        required property var handle
+                                        required property int index
+                                        visible: index === menuLevels.count - 1
+                                        width: menuColumn.width
+                                        spacing: 0
+                                        QsMenuOpener {
+                                            id: opener
+                                            menu: menuLevel.handle
+                                        }
+                                        Repeater {
+                                            model: opener.children
+                                            delegate: Rectangle {
+                                                id: entry
+                                                required property var modelData
+                                                width: menuLevel.width
+                                                height: root.s(modelData.isSeparator ? 5 : 24)
+                                                radius: root.s(5)
+                                                color: entryMouse.containsMouse && modelData.enabled
+                                                    ? Qt.alpha(Theme.accent, 0.2) : "transparent"
+                                                opacity: modelData.isSeparator || modelData.enabled ? 1 : 0.45
+
+                                                Rectangle {
+                                                    visible: entry.modelData.isSeparator
+                                                    anchors.centerIn: parent
+                                                    width: parent.width - root.s(12)
+                                                    height: 1
+                                                    color: Theme.borderAccent
+                                                }
+                                                RowLayout {
+                                                    visible: !entry.modelData.isSeparator
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: root.s(6)
+                                                    anchors.rightMargin: root.s(6)
+                                                    spacing: root.s(6)
+                                                    Item {
+                                                        Layout.preferredWidth: root.s(14)
+                                                        Layout.preferredHeight: root.s(14)
+                                                        Image {
+                                                            anchors.fill: parent
+                                                            visible: entry.modelData.buttonType === QsMenuButtonType.None
+                                                            source: entry.modelData.icon
+                                                            sourceSize: Qt.size(width, height)
+                                                        }
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            visible: entry.modelData.buttonType !== QsMenuButtonType.None
+                                                            text: entry.modelData.checkState === Qt.Unchecked ? ""
+                                                                : (entry.modelData.buttonType === QsMenuButtonType.RadioButton ? "●" : "✓")
+                                                            color: Theme.accent
+                                                        }
+                                                    }
+                                                    Text {
+                                                        Layout.fillWidth: true
+                                                        text: entry.modelData.text.replace(/&&/g, "\u0001").replace(/&/g, "").replace(/\u0001/g, "&")
+                                                        elide: Text.ElideRight
+                                                        color: Theme.text
+                                                        font.family: Theme.iconFont
+                                                        font.weight: Font.DemiBold
+                                                        font.pixelSize: root.s(12)
+                                                    }
+                                                    Text {
+                                                        visible: entry.modelData.hasChildren
+                                                        text: "›"
+                                                        color: Theme.textDim
+                                                        font.pixelSize: root.s(18)
+                                                    }
+                                                }
+                                                MouseArea {
+                                                    id: entryMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    enabled: !entry.modelData.isSeparator && entry.modelData.enabled
+                                                    onClicked: {
+                                                        if (entry.modelData.hasChildren)
+                                                            menuLevels.append({handle: entry.modelData});
+                                                        else {
+                                                            entry.modelData.triggered();
+                                                            trayMenu.visible = false;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: root.s(16)
+                        height: width
+                        source: trayIcon.modelData.icon
+                        sourceSize: Qt.size(width, height)
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    MouseArea {
+                        id: trayMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton || trayIcon.modelData.onlyMenu)
+                                trayIcon.openMenu();
+                            else if (mouse.button === Qt.MiddleButton)
+                                trayIcon.modelData.secondaryActivate();
+                            else
+                                trayIcon.modelData.activate();
+                        }
+                        onWheel: wheel => {
+                            const horizontal = wheel.angleDelta.x !== 0;
+                            trayIcon.modelData.scroll(horizontal ? wheel.angleDelta.x : wheel.angleDelta.y, horizontal);
+                        }
+                    }
                 }
             }
         }
