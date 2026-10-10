@@ -1,1 +1,1 @@
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/arthurpph/config/main/install.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/arthurpph/dotfiles/main/install.sh)"
