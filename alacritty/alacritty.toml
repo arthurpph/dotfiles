@@ -1,9 +1,29 @@
+[general]
+import = ["~/.cache/43pr/alacritty-colors.toml"]
+live_config_reload = true
+
 [window]
 opacity = 0.8
 
 [font]
-size = 12.0
+size = 10.0
 
 [font.normal]
-family = "0xProto Nerd Font"
-style = "Regular"
+family = "JetBrainsMono Nerd Font"
+style = "SemiBold"
+
+[font.bold]
+family = "JetBrainsMono Nerd Font"
+style = "ExtraBold"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font"
+style = "SemiBold Italic"
+
+[font.bold_italic]
+family = "JetBrainsMono Nerd Font"
+style = "ExtraBold Italic"
+
+[cursor]
+style = { shape = "Beam", blinking = "On" }
+blink_interval = 500

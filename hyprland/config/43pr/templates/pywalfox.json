@@ -1,0 +1,27 @@
+{
+    "wallpaper": "",
+    "alpha": "100",
+    "special": {
+        "background": "{{bg}}",
+        "foreground": "{{fg}}",
+        "cursor": "{{cursor}}"
+    },
+    "colors": {
+        "color0": "{{bg}}",
+        "color1": "{{danger}}",
+        "color2": "{{ok}}",
+        "color3": "{{term3}}",
+        "color4": "{{highlight}}",
+        "color5": "{{accent}}",
+        "color6": "{{term6}}",
+        "color7": "{{fg_dim}}",
+        "color8": "{{bg_card}}",
+        "color9": "{{term9}}",
+        "color10": "{{term10}}",
+        "color11": "{{term11}}",
+        "color12": "{{term12}}",
+        "color13": "{{term13}}",
+        "color14": "{{term14}}",
+        "color15": "{{fg}}"
+    }
+}

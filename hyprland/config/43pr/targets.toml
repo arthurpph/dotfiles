@@ -1,0 +1,41 @@
+# Each target: input template -> output file. Optional `reload` is an argv list
+# that runs once after ALL targets were written successfully.
+
+[kitty]
+input  = "~/.config/43pr/templates/kitty.conf"
+output = "~/.config/kitty/matugen.conf"
+reload = ["pkill", "-USR1", "-x", "kitty"]
+[alacritty]
+input = "~/.config/43pr/templates/alacritty.toml"
+output = "~/.cache/43pr/alacritty-colors.toml"
+reload = ["sh", "-c", 'if [ -f "$HOME/.config/alacritty/alacritty.toml" ]; then touch "$HOME/.config/alacritty/alacritty.toml"; fi']
+[rofi]
+input  = "~/.config/43pr/templates/rofi-colors.rasi"
+output = "~/.config/rofi/colors.rasi"
+[spicetify]
+input = "~/.config/43pr/templates/spicetify.ini"
+output = "~/.config/spicetify/Themes/text-43pr/color.ini"
+reload = ["bash", "-c", 'bash "$HOME/.config/43pr/bin/spicetify-theme.sh"']
+[spicetify-style]
+input = "~/.config/spicetify/Themes/text/user.css"
+output = "~/.config/spicetify/Themes/text-43pr/user.css"
+[hyprlock]
+input  = "~/.config/43pr/templates/hyprlock-colors.conf"
+output = "~/.config/hypr/hyprlock-colors.conf"
+[gtk3]
+input  = "~/.config/43pr/templates/gtk-colors.css"
+output = "~/.config/gtk-3.0/colors.css"
+[gtk4]
+input  = "~/.config/43pr/templates/gtk-colors.css"
+output = "~/.config/gtk-4.0/colors.css"
+[quickshell]
+input  = "~/.config/43pr/templates/quickshell-theme.json"
+output = "~/.cache/43pr/quickshell-theme.json"
+[discord]
+input = "~/.config/43pr/templates/discord.css"
+output = "~/.cache/43pr/discord.css"
+reload = ["bash", "-c", 'python3 "$HOME/.config/43pr/bin/theme-apps.py" discord']
+[firefox]
+input = "~/.config/43pr/templates/pywalfox.json"
+output = "~/.cache/wal/colors.json"
+reload = ["bash", "-c", 'python3 "$HOME/.config/43pr/bin/theme-apps.py" firefox']

@@ -1,0 +1,4 @@
+# Instalados por install.sh --packages; mantenha a revisão interativa do helper.
+spicetify-cli
+hyprmod
+papirus-folders
