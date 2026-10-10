@@ -1,0 +1,16 @@
+cosmic-session
+cosmic-comp
+cosmic-panel
+cosmic-applets
+cosmic-settings
+cosmic-launcher
+cosmic-app-library
+cosmic-bg
+cosmic-osd
+cosmic-notifications
+cosmic-files
+cosmic-terminal
+cosmic-store
+cosmic-player
+xdg-desktop-portal-cosmic
+cosmic-settings-daemon

@@ -122,6 +122,8 @@ def resolve_gtk_theme(dark):
 def set_gtk_color_scheme(value):
     """Sync GTK/libadwaita/portal color-scheme with our appearance mode.
     Never raises; failures only produce warnings."""
+    if not TARGETS.exists() or not any(key in load_toml(TARGETS) for key in ("gtk3", "gtk4")):
+        return
     sync_gtk_ini(value == "dark")
     if not shutil.which("gsettings"):
         warn("gsettings not found; skipping GTK color-scheme sync")

@@ -1,0 +1,3 @@
+hyprmod
+papirus-folders
+spicetify-cli

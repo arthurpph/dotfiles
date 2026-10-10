@@ -1,0 +1,4 @@
+plasma-meta
+dolphin
+konsole
+spectacle

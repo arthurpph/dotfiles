@@ -1,0 +1,13 @@
+# Shared applications and setup dependencies (Arch Linux)
+base-devel
+git
+python
+curl
+unzip
+alacritty
+neovim
+tmux
+xclip
+ttf-jetbrains-mono-nerd
+zsh-autosuggestions
+zsh-syntax-highlighting

@@ -7,7 +7,7 @@ if command -v pywalfox >/dev/null; then
 elif [[ -x "$HOME/.local/share/43pr/pywalfox/bin/pywalfox" ]]; then
     pywalfox_bin="$HOME/.local/share/43pr/pywalfox/bin/pywalfox"
 elif [[ "${1:---install}" == --register ]]; then
-    echo 'Firefox: run hyprland/setup-pywalfox.sh to install the native host.'
+    echo 'Firefox: run environments/hyprland/scripts/setup-pywalfox.sh to install the native host.'
     exit 0
 else
     pywalfox_env="$HOME/.local/share/43pr/pywalfox"

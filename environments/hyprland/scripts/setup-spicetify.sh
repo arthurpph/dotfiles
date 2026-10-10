@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if ! command -v spicetify >/dev/null; then
-    echo 'Spicetify is not installed. Run hyprland/install.sh --packages before --apply.' >&2
+    echo 'Spicetify is not installed. Run install.sh hyprland --packages before --apply.' >&2
     exit 1
 fi
 
