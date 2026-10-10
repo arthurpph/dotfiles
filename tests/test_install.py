@@ -177,6 +177,35 @@ class InstallerTests(unittest.TestCase):
                 self.assertNotIn('theme.py', calls)
                 self.assertNotIn('sudo ', calls)
 
+    def test_spotify_permissions_are_granted_only_when_needed(self):
+        script = (ROOT / 'environments/hyprland/scripts/setup-spicetify.sh').read_text()
+        permissions = 'if [[ ! -w' + script.split('if [[ ! -w', 1)[1].split('\nprefs_path=', 1)[0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            spotify = root / 'spotify'
+            apps = spotify / 'Apps'
+            apps.mkdir(parents=True)
+            asset = apps / 'login.spa'
+            asset.write_text('raw asset')
+            binaries = root / 'bin'
+            binaries.mkdir()
+            log = root / 'sudo-calls'
+            sudo = binaries / 'sudo'
+            sudo.write_text('#!/bin/bash\nprintf "%s\\n" "$*" >> "$CHECK_LOG"\nexec "$@"\n')
+            sudo.chmod(0o755)
+            asset.chmod(0o444)
+            apps.chmod(0o555)
+            spotify.chmod(0o555)
+            environment = dict(os.environ, PATH=str(binaries) + ':' + os.environ['PATH'], CHECK_LOG=str(log), spotify_path=str(spotify))
+            subprocess.run(['/bin/bash', '-eu', '-c', permissions], env=environment, check=True, capture_output=True)
+            self.assertTrue(os.access(spotify, os.W_OK))
+            self.assertTrue(os.access(apps, os.W_OK))
+            self.assertTrue(os.access(asset, os.W_OK))
+            self.assertEqual(len(log.read_text().splitlines()), 2)
+            subprocess.run(['/bin/bash', '-eu', '-c', permissions], env=environment, check=True, capture_output=True)
+            self.assertEqual(len(log.read_text().splitlines()), 2)
+            asset.unlink()
+
     def test_default_install_orders_packages_and_application_setups(self):
         for helper_installed in (False, True):
             with self.subTest(helper_installed=helper_installed), tempfile.TemporaryDirectory() as directory:

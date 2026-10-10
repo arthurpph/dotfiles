@@ -1,4 +1,5 @@
 # Hyprland desktop dependencies (Arch Linux)
+acl
 hyprland
 hyprlock
 hyprpolkitagent

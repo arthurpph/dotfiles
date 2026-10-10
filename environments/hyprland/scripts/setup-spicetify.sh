@@ -23,6 +23,16 @@ if [[ -z "$spotify_path" ]]; then
     [[ -d "$spotify_path/Apps" ]] || exit 1
 fi
 
+if [[ ! -w "$spotify_path" ]] || [[ -n "$(find "$spotify_path/Apps" ! -writable -print -quit)" ]]; then
+    if ! command -v setfacl >/dev/null; then
+        echo 'Spotify requires write permissions. Run install.sh hyprland --packages to install ACL support.' >&2
+        exit 1
+    fi
+    echo 'Granting the current user write access to Spotify theme assets.'
+    sudo setfacl -m "u::rwX,u:$(id -u):rwX" "$spotify_path"
+    sudo setfacl -R -m "u::rwX,u:$(id -u):rwX" "$spotify_path/Apps"
+fi
+
 prefs_path="$HOME/.config/spotify/prefs"
 if [[ "$spotify_path" == *flatpak* ]]; then
     prefs_path="$HOME/.var/app/com.spotify.Client/config/spotify/prefs"
