@@ -31,6 +31,9 @@ output = "~/.config/gtk-4.0/colors.css"
 [quickshell]
 input  = "~/.config/43pr/templates/quickshell-theme.json"
 output = "~/.cache/43pr/quickshell-theme.json"
+[share-picker]
+input = "~/.config/43pr/templates/share-picker.qss"
+output = "~/.cache/43pr/share-picker.qss"
 [discord]
 input = "~/.config/43pr/templates/discord.css"
 output = "~/.cache/43pr/discord.css"

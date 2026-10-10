@@ -43,6 +43,11 @@ class InstallerTests(unittest.TestCase):
                 self.assertEqual((home / '.config/matugen').exists(), desktop == 'hyprland')
                 if desktop == 'hyprland':
                     self.assertIn('[hyprlock]', targets.read_text())
+                    picker = home / '.config/hypr/scripts/share-picker.sh'
+                    self.assertTrue(os.access(picker, os.X_OK))
+                    portal = (home / '.config/hypr/xdph.conf').read_text()
+                    self.assertIn(str(picker), portal)
+                    self.assertNotIn('@SHARE_PICKER@', portal)
                 if desktop == 'cosmic':
                     background = home / '.config/cosmic/com.system76.CosmicBackground/v1/all'
                     self.assertIn(str(home / 'Pictures/Wallpapers'), background.read_text())

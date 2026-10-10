@@ -18,6 +18,8 @@ def plan(root, desktop, home):
         for src in sorted(source.rglob('*')):
             if src.is_file() and not any(part in {'.git', '__pycache__'} for part in src.relative_to(source).parts):
                 content = None
+                if src.name == 'xdph.conf' and src.parent.name == 'hypr':
+                    content = src.read_text().replace('@SHARE_PICKER@', str(config / 'hypr/scripts/share-picker.sh')).encode()
                 if src.name == 'config-xpui.ini' and src.parent.name == 'spicetify':
                     content = src.read_text().replace('/home/arthurpiana/', str(home) + '/').encode()
                 if portable:
