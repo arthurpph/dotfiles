@@ -266,18 +266,5 @@ input type:pointer {
     pointer_accel -0.5
 }
 
-set $hiddenws "99"
-bindsym $mod+Shift+n move container to workspace number $hiddenws
-bindsym $mod+n exec "swaymsg workspace number 99; swaymsg mode restore"
-mode "restore" {
-    bindsym h focus left
-    bindsym j focus down
-    bindsym k focus up
-    bindsym l focus right
-    bindsym Return exec 'swaymsg move container to workspace back_and_forth; swaymsg mode "default"; swaymsg workspace back_and_forth'
-    bindsym Escape exec 'swaymsg mode "default"; swaymsg workspace back_and_forth'
-    bindsym $mod+Shift+n exec 'swaymsg mode "default"; swaymsg workspace back_and_forth'
-}
-
 include /etc/sway/config.d/*
 
