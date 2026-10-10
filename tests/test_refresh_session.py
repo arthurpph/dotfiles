@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -103,13 +104,53 @@ class RefreshTests(unittest.TestCase):
         replies = iter(([managed, other], [managed, other], [other], [managed, other]))
 
         def fake_run(*arguments):
-            return json.dumps(next(replies)) if arguments == ('qs', 'list', '-j') else ''
+            return json.dumps(next(replies)) if arguments[:2] == ('qs', 'list') else ''
 
         with patch.object(REFRESH, 'run', side_effect=fake_run) as run, patch.object(REFRESH.time, 'sleep'):
             REFRESH.quickshell(home)
         actions = [call.args for call in run.call_args_list if call.args[:2] != ('qs', 'list')]
         self.assertEqual(actions, [('qs', 'kill', '--id', 'ours'),
                                    ('qs', '--path', str(home / '.config/quickshell/shell.qml'), '--daemonize', '--no-duplicate')])
+
+    def test_quickshell_restarts_after_the_cli_returns_a_non_json_empty_list(self):
+        home = Path('/home/example')
+        path = home / '.config/quickshell/shell.qml'
+        managed = {'id': 'ours', 'config_path': str(path)}
+        empty = f'No running instances for "{path}"\nUse --all to list all instances.\n'
+        replies = iter((json.dumps([managed]), empty, json.dumps([managed])))
+
+        def fake_run(*arguments):
+            return next(replies) if arguments[:2] == ('qs', 'list') else ''
+
+        with patch.object(REFRESH, 'run', side_effect=fake_run) as run:
+            REFRESH.quickshell(home)
+        run.assert_any_call('qs', 'kill', '--id', 'ours')
+        run.assert_any_call('qs', '--path', str(path), '--daemonize', '--no-duplicate')
+
+    def test_quickshell_can_start_when_no_instance_exists(self):
+        home = Path('/home/example')
+        path = home / '.config/quickshell/shell.qml'
+        replies = iter(('', 'No running instances.\n', json.dumps([{'id': 'new', 'config_path': str(path)}])))
+
+        def fake_run(*arguments):
+            return next(replies) if arguments[:2] == ('qs', 'list') else ''
+
+        with patch.object(REFRESH, 'run', side_effect=fake_run) as run:
+            REFRESH.quickshell(home)
+        self.assertFalse(any(call.args[:2] == ('qs', 'kill') for call in run.call_args_list))
+        run.assert_any_call('qs', '--path', str(path), '--daemonize', '--no-duplicate')
+
+    def test_unexpected_quickshell_output_is_reported_instead_of_ignored(self):
+        with patch.object(REFRESH, 'run', return_value='Unexpected CLI failure'):
+            with self.assertRaisesRegex(RuntimeError, 'Unexpected output from qs list'):
+                REFRESH.quickshell_instances(Path('/home/example/shell.qml'))
+
+    @unittest.skipUnless(shutil.which('qs'), 'Quickshell CLI is not installed')
+    def test_actual_quickshell_cli_without_a_running_instance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'shell.qml'
+            path.write_text('import Quickshell\nShellRoot {}\n')
+            self.assertEqual(REFRESH.quickshell_instances(path), [])
 
     def test_failed_application_launch_is_retried_even_after_the_old_process_exits(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(REFRESH.shutil, 'which', return_value='/usr/bin/discord'), \

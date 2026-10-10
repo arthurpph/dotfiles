@@ -148,11 +148,29 @@ def restart_application(names, executable, home):
     pending.unlink(missing_ok=True)
 
 
+def quickshell_instances(path):
+    output = run('qs', 'list', '--path', str(path), '-j').strip()
+    # Quickshell prints this human-readable message even with -j when there
+    # are no instances. This is the normal state between stop and start.
+    if not output or output.startswith('No running instances'):
+        return []
+    try:
+        instances = json.loads(output)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f'Unexpected output from qs list: {output[:300]}') from error
+    if not isinstance(instances, list) or any(
+            not isinstance(instance, dict)
+            or not isinstance(instance.get('config_path'), str)
+            or not isinstance(instance.get('id'), str) for instance in instances):
+        raise RuntimeError('qs list returned an invalid instance list')
+    return instances
+
+
 def quickshell(home):
     path = home / '.config/quickshell/shell.qml'
 
     def matching():
-        return [instance for instance in json.loads(run('qs', 'list', '-j'))
+        return [instance for instance in quickshell_instances(path)
                 if Path(instance['config_path']).resolve() == path.resolve()]
 
     for instance in matching():
