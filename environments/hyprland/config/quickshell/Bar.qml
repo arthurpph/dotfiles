@@ -38,9 +38,9 @@ Scope {
             property bool showNotif: true
             property bool showWall: true
             property bool showSettings: true
-            property string startMods: "stats,ws,tray"
+            property string startMods: "stats,ws,tray,net"
             property string centerMods: "clock"
-            property string endMods: "media,volume,battery,net,notif,wall,settings,power"
+            property string endMods: "media,volume,battery,notif,wall,settings,power"
         }
     }
 
@@ -56,9 +56,9 @@ Scope {
         cfg.showStats = false; cfg.showWs = true; cfg.showTray = true; cfg.showMedia = true;
         cfg.showVolume = true; cfg.showBattery = true; cfg.showNet = true;
         cfg.showNotif = true; cfg.showWall = true; cfg.showSettings = true;
-        cfg.startMods = "stats,ws,tray";
+        cfg.startMods = "stats,ws,tray,net";
         cfg.centerMods = "clock";
-        cfg.endMods = "media,volume,battery,net,notif,wall,settings,power";
+        cfg.endMods = "media,volume,battery,notif,wall,settings,power";
     }
 
     readonly property bool vertical: cfg.position === "left" || cfg.position === "right"
@@ -249,6 +249,20 @@ Scope {
     property int cpuUsage: 0
     property int memPercent: 0
     property string netState: "disconnected"
+    property string netDevice: ""
+    property real netDown: 0
+    property real netUp: 0
+    property real netPrevRx: 0
+    property real netPrevTx: 0
+    property real netPrevTime: 0
+    property string netPrevDevice: ""
+
+    function formatNetSpeed(bytes) {
+        if (bytes < 1024) return Math.round(bytes) + " B/s";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB/s";
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB/s";
+        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB/s";
+    }
     property real _prevTotal: 0
     property real _prevIdle: 0
 
@@ -280,17 +294,59 @@ Scope {
 
     Process {
         id: netProc
-        command: ["nmcli", "-t", "-f", "TYPE,STATE", "device"]
+        command: ["env", "LC_ALL=C", "nmcli", "-t", "-f", "DEVICE,TYPE,STATE", "device"]
         stdout: StdioCollector {
             onStreamFinished: {
                 let s = "disconnected";
+                let device = "";
                 for (const l of text.split("\n")) {
-                    if (l === "ethernet:connected") { s = "ethernet"; break; }
-                    if (l === "wifi:connected") s = "wifi";
+                    const fields = l.split(":");
+                    if (fields[2] !== "connected") continue;
+                    if (fields[1] === "ethernet") { s = "ethernet"; device = fields[0]; break; }
+                    if (fields[1] === "wifi") { s = "wifi"; device = fields[0]; }
                 }
                 if (s !== root.netState) root.netState = s;
+                if (device !== root.netDevice) {
+                    root.netDevice = device;
+                    root.netDown = 0;
+                    root.netUp = 0;
+                    root.netPrevTime = 0;
+                }
             }
         }
+    }
+
+    FileView {
+        id: netStatsFile
+        path: "/proc/net/dev"
+        onLoaded: {
+            const now = Date.now();
+            for (const line of text().split("\n").slice(2)) {
+                const colon = line.indexOf(":");
+                if (colon < 0 || line.slice(0, colon).trim() !== root.netDevice) continue;
+                const fields = line.slice(colon + 1).trim().split(/\s+/);
+                const rx = Number(fields[0]);
+                const tx = Number(fields[8]);
+                const elapsed = (now - root.netPrevTime) / 1000;
+                if (root.netPrevTime > 0 && root.netPrevDevice === root.netDevice && elapsed > 0) {
+                    root.netDown = Math.max(0, (rx - root.netPrevRx) / elapsed);
+                    root.netUp = Math.max(0, (tx - root.netPrevTx) / elapsed);
+                }
+                root.netPrevRx = rx;
+                root.netPrevTx = tx;
+                root.netPrevTime = now;
+                root.netPrevDevice = root.netDevice;
+                return;
+            }
+            root.netDown = 0;
+            root.netUp = 0;
+            root.netPrevTime = 0;
+        }
+    }
+
+    Timer {
+        interval: 1000; running: root.barVisible; repeat: true; triggeredOnStart: true
+        onTriggered: netStatsFile.reload()
     }
 
     Timer {
@@ -909,10 +965,15 @@ Scope {
     Component {
         id: netC
         Mod {
-            baseSize: root.sizeNetIcon
+            baseSize: root.sizeBatText
+            glyphSize: root.sizeNetIcon
             yOffset: root.iconYOffset
-            text: root.netState === "wifi" ? "\uDB81\uDDA9"
+            glyph: root.netState === "wifi" ? "\uDB81\uDDA9"
                 : root.netState === "ethernet" ? "\uDB80\uDE00" : "\uDB81\uDDAA"
+            text: root.netState === "disconnected" ? "Offline"
+                : "↓ " + root.formatNetSpeed(root.netDown) + "  ↑ " + root.formatNetSpeed(root.netUp)
+            vtext: root.netState === "disconnected" ? "Offline"
+                : "↓ " + root.formatNetSpeed(root.netDown) + "\n↑ " + root.formatNetSpeed(root.netUp)
             onClicked: root.run("qs ipc call settings network")
         }
     }
