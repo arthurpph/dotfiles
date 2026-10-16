@@ -12,6 +12,9 @@ browser    = "xdg-open https://www.google.com"
 ---- AUTOSTART ----
 
 hl.on("hyprland.start", function()
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme Adwaita")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-size 24")
+    hl.exec_cmd("hyprctl setcursor Adwaita 24")
     -- hl.exec_cmd("dunst") replaced with quickshell notifications
     hl.exec_cmd("nm-applet")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
@@ -25,7 +28,9 @@ end)
 
 ---- ENVIRONMENT VARIABLES ----
 
+hl.env("XCURSOR_THEME", "Adwaita")
 hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_THEME", "Adwaita")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
