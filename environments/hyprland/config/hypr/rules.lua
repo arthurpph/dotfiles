@@ -40,6 +40,8 @@ hl.window_rule({
 hl.window_rule({
     name = "float-thunar",
     match = { class = "^(thunar|Thunar)$" },
+    opaque = true,
+    force_rgbx = true,
     float = true,
     size = { "monitor_w*0.6", "monitor_h*0.7" },
     center = true,
@@ -88,4 +90,21 @@ hl.window_rule({
     match = { class = "^(rvrvpngui\\.exe|RvRvpnGui\\.exe)$", title = "^Radmin VPN$" },
     float = true,
     center = true,
+})
+
+hl.window_rule({
+    name = "float-loupe",
+    match = { class = "^(org\\.gnome\\.Loupe|loupe)$" },
+    float = true,
+    size = { "monitor_w*0.75", "monitor_h*0.8" },
+    center = true,
+})
+
+-- GTK portal file chooser used by browsers and other applications.
+hl.window_rule({
+    name = "opaque-gtk-file-chooser",
+    match = { class = "^(xdg-desktop-portal-gtk)$" },
+    opaque = true,
+    force_rgbx = true,
+    float = true,
 })
