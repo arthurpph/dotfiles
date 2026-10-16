@@ -81,3 +81,11 @@ hl.window_rule({
     match = { title = "^(Save File)$" },
     float = true,
 })
+
+-- Wine can restore Radmin VPN beyond the monitor bounds.
+hl.window_rule({
+    name = "float-radmin-vpn",
+    match = { class = "^(rvrvpngui\\.exe|RvRvpnGui\\.exe)$", title = "^Radmin VPN$" },
+    float = true,
+    center = true,
+})
