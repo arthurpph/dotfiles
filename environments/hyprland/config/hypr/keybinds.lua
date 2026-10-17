@@ -1,17 +1,17 @@
--- Sway workflow, keeping the 43PR desktop controls on alternate shortcuts.
 local home = os.getenv("HOME")
 local function exec(keys, command, options)
     hl.bind(keys, hl.dsp.exec_cmd(command), options)
 end
 
-exec("SUPER + Return", terminal)
+exec("SUPER + Return", fileManager)
 exec("SUPER + T", terminal)
 exec("SUPER + D", "pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu)
 hl.bind("SUPER + SHIFT + Q", hl.dsp.window.close())
 exec("SUPER + SHIFT + C", "hyprctl reload")
-exec("SUPER + SHIFT + E", [[swaynag -t warning -m 'End the Hyprland session?' -B 'Yes, log out' "hyprctl dispatch 'hl.dsp.exit()'"]])
+exec("SUPER + SHIFT + E",
+    [[swaynag -t warning -m 'End the Hyprland session?' -B 'Yes, log out' "hyprctl dispatch 'hl.dsp.exit()'"]])
 
-for _, pair in ipairs({{"H", "Left", "l"}, {"J", "Down", "d"}, {"K", "Up", "u"}, {"L", "Right", "r"}}) do
+for _, pair in ipairs({ { "H", "Left", "l" }, { "J", "Down", "d" }, { "K", "Up", "u" }, { "L", "Right", "r" } }) do
     for i = 1, 2 do
         hl.bind("SUPER + " .. pair[i], hl.dsp.focus({ direction = pair[3] }))
         hl.bind("SUPER + SHIFT + " .. pair[i], hl.dsp.window.move({ direction = pair[3] }))
@@ -51,8 +51,8 @@ hl.bind("SUPER + SHIFT + minus", hl.dsp.window.move({ workspace = "special:scrat
 hl.bind("SUPER + minus", hl.dsp.workspace.toggle_special("scratchpad"))
 hl.bind("SUPER + R", hl.dsp.submap("resize"))
 hl.define_submap("resize", function()
-    for _, entry in ipairs({{"H", -10, 0}, {"Left", -10, 0}, {"J", 0, 10}, {"Down", 0, 10},
-                           {"K", 0, -10}, {"Up", 0, -10}, {"L", 10, 0}, {"Right", 10, 0}}) do
+    for _, entry in ipairs({ { "H", -10, 0 }, { "Left", -10, 0 }, { "J", 0, 10 }, { "Down", 0, 10 },
+        { "K", 0,   -10 }, { "Up", 0, -10 }, { "L", 10, 0 }, { "Right", 10, 0 } }) do
         hl.bind(entry[1], hl.dsp.window.resize({ x = entry[2], y = entry[3], relative = true }), { repeating = true })
     end
     hl.bind("Return", hl.dsp.submap("reset"))
@@ -106,4 +106,3 @@ hl.bind(mainMod .. " + mouse_up", function() zoomfunction(0.5) end, { repeating 
 --# Zoom with keypad
 hl.bind(mainMod .. " + code:82", function() zoomfunction(-0.3) end, { repeating = true })
 hl.bind(mainMod .. " + code:86", function() zoomfunction(0.3) end, { repeating = true })
-
