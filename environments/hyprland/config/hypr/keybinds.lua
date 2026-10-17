@@ -1,4 +1,3 @@
-local home = os.getenv("HOME")
 local function exec(keys, command, options)
     hl.bind(keys, hl.dsp.exec_cmd(command), options)
 end
