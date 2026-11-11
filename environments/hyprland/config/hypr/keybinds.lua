@@ -67,6 +67,11 @@ exec("XF86MonBrightnessUp", "brightnessctl set 5%+", { locked = true, repeating 
 exec("XF86AudioPlay", "playerctl --player=spotify,firefox play-pause", { locked = true })
 exec("XF86AudioNext", "playerctl next", { locked = true })
 exec("XF86AudioPrev", "playerctl previous", { locked = true })
+
+-- Spotify's internal volume, including when a game inhibits shortcuts.
+exec("SUPER + Page_Up", "playerctl --player=spotify volume 0.05+", { repeating = true, dont_inhibit = true })
+exec("SUPER + Page_Down", "playerctl --player=spotify volume 0.05-", { repeating = true, dont_inhibit = true })
+
 exec("Print", "bash ~/.config/hypr/scripts/screenshot.sh region")
 exec("SHIFT + Print", "bash ~/.config/hypr/scripts/screenshot.sh full")
 exec("SUPER + G", "hyprlock")
@@ -87,6 +92,7 @@ exec("SUPER + GRAVE", "qs ipc call powermenu toggle")
 exec("SUPER + O", "bash ~/.config/hypr/scripts/opacity.sh")
 exec("SUPER + SHIFT + W", "qs ipc call bar toggle")
 exec("SUPER + X", "hyprctl switchxkblayout current next")
+exec("SUPER + period", "rofimoji --selector rofi --action copy --clipboarder wl-copy")
 
 -- Zoom
 local function zoomfunction(value)

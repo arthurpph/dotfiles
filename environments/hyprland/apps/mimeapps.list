@@ -47,7 +47,7 @@ image/heic=org.gnome.Loupe.desktop
 
 [Added Associations]
 application/vnd.microsoft.portable-executable=wine.desktop;
-video/mp4=vlc.desktop;
+video/mp4=org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop;vlc.desktop;
 text/plain=org.xfce.mousepad.desktop;
 image/apng=org.gnome.Loupe.desktop;
 image/bmp=org.gnome.Loupe.desktop;
