@@ -77,6 +77,7 @@ exec("SHIFT + Print", "bash ~/.config/hypr/scripts/screenshot.sh full")
 exec("SUPER + G", "hyprlock")
 exec("SUPER + Tab", "hyprlock")
 exec("SUPER + C", "pkill -SIGUSR1 -f '^gpu-screen-recorder( |$)'")
+exec("SUPER + SHIFT + R", "bash ~/.config/hypr/scripts/replay.sh restart")
 
 -- Desktop controls relocated away from the Sway shortcuts.
 exec("SUPER + ALT + S", "qs ipc call wheel toggle")

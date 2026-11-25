@@ -32,9 +32,6 @@ if [[ -f "$wallpaper" ]] && command -v awww >/dev/null; then
     done
 fi
 
-if command -v gpu-screen-recorder >/dev/null && ! pgrep -f '^gpu-screen-recorder( |$)' >/dev/null; then
-    mkdir -p "$HOME/clips" "$HOME/.cache/hyprland"
-    gpu-screen-recorder -w portal -restore-portal-session yes -f 60 -r 60 -c mp4 \
-        -a default_output -o "$HOME/clips" -bm cbr -q 35000 \
-        >"$HOME/.cache/hyprland/replay.log" 2>&1 &
+if command -v gpu-screen-recorder >/dev/null; then
+    bash "$HOME/.config/hypr/scripts/replay.sh" start &
 fi
